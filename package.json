@@ -13,6 +13,10 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devforth/adminforth-keycloak-oauth-adapter"
+  },
   "dependencies": {
     "jwt-decode": "^4.0.0"
   }
