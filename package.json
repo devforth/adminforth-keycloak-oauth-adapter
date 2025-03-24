@@ -18,6 +18,8 @@
     "url": "https://github.com/devforth/adminforth-keycloak-oauth-adapter"
   },
   "dependencies": {
-    "jwt-decode": "^4.0.0"
+    "adminforth": "^1.13.0",
+    "jwt-decode": "^4.0.0",
+    "typescript": "^5.8.2"
   }
 }
