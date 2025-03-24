@@ -19,7 +19,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       this.clientSecret = options.clientSecret;
       this.keycloakUrl = options.keycloakUrl;
       this.realm = options.realm;
-      this.useOpenID = options.useOpenID ?? process.env.OPENID === "true";
+      this.useOpenID = options.useOpenID ?? true;
     }
   
     getAuthUrl(): string {
