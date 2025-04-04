@@ -7,6 +7,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
     private keycloakUrl: string;
     private realm: string;
     private useOpenID: boolean;
+    private name: string;
     private buttonIcon: string | undefined;
 
     constructor(options: {
@@ -15,13 +16,36 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       keycloakUrl: string;
       realm: string;
       useOpenID?: boolean;
+      name?: string;
       buttonIcon?: string;
     }) {
+      if (!options.clientID) {
+        throw new Error("AdminForthAdapterKeycloakOauth2: Missing required 'clientID'");
+      }
+    
+      if (!options.clientSecret) {
+        throw new Error("AdminForthAdapterKeycloakOauth2: Missing required 'clientSecret'");
+      }
+    
+      if (!options.keycloakUrl) {
+        throw new Error("AdminForthAdapterKeycloakOauth2: Missing required 'keycloakUrl'");
+      }
+    
+      if (!options.realm) {
+        throw new Error("AdminForthAdapterKeycloakOauth2: Missing required 'realm'");
+      }
+      try {
+        new URL(options.keycloakUrl);
+      } catch {
+        throw new Error("AdminForthAdapterKeycloakOauth2: 'keycloakUrl' must be a valid URL");
+      }
+
       this.clientID = options.clientID;
       this.clientSecret = options.clientSecret;
       this.keycloakUrl = options.keycloakUrl;
       this.realm = options.realm;
       this.useOpenID = options.useOpenID ?? true;
+      this.name = options.name ?? "Keycloak";
       this.buttonIcon = options.buttonIcon;
     }
   
@@ -78,7 +102,9 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
 
       return { email: userInfo.email };
     }
-
+    getName(): string {
+      return this.name;
+    }
     getIcon(): string {
       return this.buttonIcon || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 167 151" fill="none">
 <g clip-path="url(#clip0_161_14)">
