@@ -7,6 +7,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
     private keycloakUrl: string;
     private realm: string;
     private useOpenID: boolean;
+    private useOpenIdConnect: boolean;
     private name: string;
     private buttonIcon: string | undefined;
 
@@ -16,6 +17,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       keycloakUrl: string;
       realm: string;
       useOpenID?: boolean;
+      useOpenIdConnect?: boolean;
       name?: string;
       buttonIcon?: string;
     }) {
@@ -40,11 +42,15 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
         throw new Error("AdminForthAdapterKeycloakOauth2: 'keycloakUrl' must be a valid URL");
       }
 
+      if (options.useOpenID !== undefined ) {
+        console.error("AdminForthAdapterKeycloakOauth2: 'useOpenID' is deprecated, please use 'useOpenIdConnect' instead");
+      }
+
       this.clientID = options.clientID;
       this.clientSecret = options.clientSecret;
       this.keycloakUrl = options.keycloakUrl;
       this.realm = options.realm;
-      this.useOpenID = options.useOpenID ?? true;
+      this.useOpenIdConnect = (options.useOpenIdConnect || options.useOpenID) ?? true;
       this.name = options.name ?? "Keycloak";
       this.buttonIcon = options.buttonIcon;
     }
@@ -78,7 +84,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
         throw new Error(tokenData.error_description || tokenData.error);
       }
 
-      if (this.useOpenID && tokenData.access_token) {
+      if (this.useOpenIdConnect && tokenData.access_token) {
         try {
           const decodedToken: any = jwtDecode(tokenData.access_token);
           if (decodedToken.email) {
