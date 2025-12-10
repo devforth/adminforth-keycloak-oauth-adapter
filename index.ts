@@ -64,7 +64,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       return `${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/auth?${params.toString()}`;
     }
   
-    async getTokenFromCode(code: string, redirect_uri: string): Promise<{ email: string; }> {
+    async getTokenFromCode(code: string, redirect_uri: string): Promise<{ email: string, fullName?: string, profilePictureUrl?: string }> {
       const tokenResponse = await fetch(`${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -106,7 +106,11 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
         throw new Error("Email not found in user info");
       }
 
-      return { email: userInfo.email };
+      return { 
+        email: userInfo.email,
+        fullName: userInfo.name,
+        profilePictureUrl: userInfo.picture,
+      };
     }
     getName(): string {
       return this.name;
