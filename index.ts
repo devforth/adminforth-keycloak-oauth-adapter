@@ -50,7 +50,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       this.clientSecret = options.clientSecret;
       this.keycloakUrl = options.keycloakUrl;
       this.realm = options.realm;
-      this.useOpenIdConnect = (options.useOpenIdConnect || options.useOpenID) ?? true;
+      this.useOpenIdConnect = (!!options.useOpenIdConnect || !!options.useOpenID) ?? true;
       this.name = options.name ?? "Keycloak";
       this.buttonIcon = options.buttonIcon;
     }
