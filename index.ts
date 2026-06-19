@@ -1,25 +1,17 @@
-import type { OAuth2Adapter } from "adminforth";
+import type { OAuth2Adapter, OAuth2UserInfo } from "adminforth";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
-type OAuth2UserInfoLocal = {
-  email: string;
-  provider?: string;
-  subject?: string;
-  phone?: string;
-  meta?: Record<string, any>;
-  fullName?: string;
-  profilePictureUrl?: string | null;
-  externalUserId?: string | number | null;
-};
-import { jwtDecode } from "jwt-decode";
+
 export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
     private clientID: string;
     private clientSecret: string;
     private keycloakUrl: string;
     private realm: string;
-    private useOpenID: boolean;
     private useOpenIdConnect: boolean;
     private name: string;
     private buttonIcon: string | undefined;
+    private issuer: string;
+    private keycloakJWKS: ReturnType<typeof createRemoteJWKSet>;
 
     constructor(options: {
       clientID: string;
@@ -63,6 +55,8 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       this.useOpenIdConnect = (!!options.useOpenIdConnect || !!options.useOpenID) ?? true;
       this.name = options.name ?? "Keycloak";
       this.buttonIcon = options.buttonIcon;
+      this.issuer = `${this.keycloakUrl}/realms/${this.realm}`;
+      this.keycloakJWKS = createRemoteJWKSet(new URL(`${this.issuer}/protocol/openid-connect/certs`));
     }
   
     getAuthUrl(): string {
@@ -74,7 +68,7 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
       return `${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/auth?${params.toString()}`;
     }
   
-    async getTokenFromCode(code: string, redirect_uri: string): Promise<OAuth2UserInfoLocal> {
+    async getTokenFromCode(code: string, redirect_uri: string): Promise<OAuth2UserInfo> {
       const tokenResponse = await fetch(`${this.keycloakUrl}/realms/${this.realm}/protocol/openid-connect/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -94,20 +88,26 @@ export default class AdminForthAdapterKeycloakOauth2 implements OAuth2Adapter {
         throw new Error(tokenData.error_description || tokenData.error);
       }
 
-      if (this.useOpenIdConnect && tokenData.access_token) {
+      if (this.useOpenIdConnect && tokenData.id_token) {
         try {
-          const decodedToken: any = jwtDecode(tokenData.access_token);
-          if (decodedToken.email) {
+          const { payload } = await jwtVerify(tokenData.id_token, this.keycloakJWKS, {
+            issuer: this.issuer,
+            audience: this.clientID,
+            algorithms: ["RS256"],
+          });
+
+          if (typeof payload.email === 'string') {
             return {
               provider: this.constructor.name,
-              subject: decodedToken.sub,
-              email: decodedToken.email,
-              fullName: decodedToken.name,
-              profilePictureUrl: decodedToken.picture,
+              subject: payload.sub,
+              email: payload.email,
+              fullName: typeof payload.name === 'string' ? payload.name : undefined,
+              profilePictureUrl: typeof payload.picture === 'string' ? payload.picture : undefined,
             };
           }
         } catch (error) {
-          console.error("Error decoding token:", error);
+          console.error("Error verifying token:", error);
+          throw error;
         }
       }
 
